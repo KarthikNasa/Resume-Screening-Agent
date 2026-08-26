@@ -41,7 +41,6 @@ SKILL_ALIASES = {
     "spring": [
         "spring framework",
         "spring boot",
-        "spring",
     ],
     "rest api": [
         "rest api",
@@ -121,6 +120,7 @@ SKILL_ALIASES = {
 
 
 def normalize_text(text: str) -> str:
+
     text = text.lower()
 
     text = re.sub(
@@ -138,14 +138,19 @@ def normalize_text(text: str) -> str:
     return text.strip()
 
 
-def extract_skills(job_description: str) -> list[str]:
-    normalized_jd = normalize_text(
-        job_description
+def extract_skills(
+    text: str,
+) -> list[str]:
+
+    normalized_text = normalize_text(
+        text
     )
 
     found_skills = []
 
-    for canonical_skill, aliases in SKILL_ALIASES.items():
+    for canonical_skill, aliases in (
+        SKILL_ALIASES.items()
+    ):
 
         for alias in aliases:
 
@@ -153,7 +158,8 @@ def extract_skills(job_description: str) -> list[str]:
                 alias
             )
 
-            if normalized_alias in normalized_jd:
+            if normalized_alias in normalized_text:
+
                 found_skills.append(
                     canonical_skill
                 )
@@ -162,4 +168,80 @@ def extract_skills(job_description: str) -> list[str]:
 
     return sorted(
         list(set(found_skills))
+    )
+
+
+def extract_experience_years(
+    text: str,
+) -> float:
+
+    normalized_text = text.lower()
+
+    patterns = [
+        r"(\d+(?:\.\d+)?)\+?\s*years?\s*(?:of)?\s*experience",
+        r"(\d+(?:\.\d+)?)\+?\s*years?\s*exp",
+    ]
+
+    values = []
+
+    for pattern in patterns:
+
+        matches = re.findall(
+            pattern,
+            normalized_text,
+        )
+
+        for match in matches:
+
+            try:
+                values.append(
+                    float(match)
+                )
+
+            except ValueError:
+                pass
+
+    if not values:
+        return 0.0
+
+    return max(values)
+
+
+def extract_education(
+    text: str,
+) -> list[str]:
+
+    normalized_text = normalize_text(
+        text
+    )
+
+    education_keywords = [
+        "bachelor",
+        "bachelors",
+        "b.tech",
+        "btech",
+        "b.e",
+        "be degree",
+        "master",
+        "masters",
+        "m.tech",
+        "mtech",
+        "m.e",
+        "mba",
+        "mca",
+        "bca",
+        "phd",
+        "doctorate",
+    ]
+
+    found = []
+
+    for keyword in education_keywords:
+
+        if keyword in normalized_text:
+
+            found.append(keyword)
+
+    return sorted(
+        list(set(found))
     )
