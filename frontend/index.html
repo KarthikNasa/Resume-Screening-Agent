@@ -1,1 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        AI Resume Screening Agent
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="/static/style.css"
+    >
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <header class="header">
+
+        <div>
+
+            <h1>
+                AI Resume Screening Agent
+            </h1>
+
+            <p>
+                Analyze resumes against a job description
+                and find the top 5 candidates.
+            </p>
+
+        </div>
+
+    </header>
+
+
+    <main>
+
+        <!-- ============================= -->
+        <!-- JOB DESCRIPTION -->
+        <!-- ============================= -->
+
+        <section class="card">
+
+            <h2>
+                1. Job Description
+            </h2>
+
+            <p class="help-text">
+                Paste the complete job description below.
+            </p>
+
+            <textarea
+                id="jobDescription"
+                placeholder="Example:
+
+Senior Python Developer
+
+Required:
+- Python
+- FastAPI
+- PostgreSQL
+- Docker
+
+Minimum 4 years experience.
+
+Preferred:
+- AWS
+- Kubernetes"
+            ></textarea>
+
+        </section>
+
+
+        <!-- ============================= -->
+        <!-- RESUME UPLOAD -->
+        <!-- ============================= -->
+
+        <section class="card">
+
+            <h2>
+                2. Upload Resumes
+            </h2>
+
+            <p class="help-text">
+                Upload PDF or DOCX resumes.
+            </p>
+
+
+            <div
+                id="dropZone"
+                class="drop-zone"
+            >
+
+                <div class="upload-icon">
+                    📄
+                </div>
+
+                <h3>
+                    Drop resumes here
+                </h3>
+
+                <p>
+                    or
+                </p>
+
+                <label
+                    for="resumeFiles"
+                    class="upload-button"
+                >
+                    Select Resumes
+                </label>
+
+                <input
+                    id="resumeFiles"
+                    type="file"
+                    accept=".pdf,.docx"
+                    multiple
+                    hidden
+                >
+
+                <p class="file-info">
+                    PDF and DOCX supported
+                </p>
+
+            </div>
+
+
+            <div
+                id="fileList"
+                class="file-list"
+            ></div>
+
+        </section>
+
+
+        <!-- ============================= -->
+        <!-- ANALYZE BUTTON -->
+        <!-- ============================= -->
+
+        <section class="action-section">
+
+            <button
+                id="analyzeButton"
+                class="analyze-button"
+            >
+
+                Analyze Resumes
+
+            </button>
+
+            <div
+                id="loading"
+                class="loading hidden"
+            >
+
+                <div class="spinner"></div>
+
+                <span>
+                    Analyzing resumes...
+                </span>
+
+            </div>
+
+        </section>
+
+
+        <!-- ============================= -->
+        <!-- ERROR -->
+        <!-- ============================= -->
+
+        <div
+            id="errorMessage"
+            class="error hidden"
+        ></div>
+
+
+        <!-- ============================= -->
+        <!-- RESULTS -->
+        <!-- ============================= -->
+
+        <section
+            id="resultsSection"
+            class="results hidden"
+        >
+
+            <div class="results-header">
+
+                <div>
+
+                    <h2>
+                        Top 5 Candidates
+                    </h2>
+
+                    <p id="resultSummary"></p>
+
+                </div>
+
+            </div>
+
+
+            <!-- JD ANALYSIS -->
+
+            <div class="card">
+
+                <h3>
+                    Job Requirements
+                </h3>
+
+                <div>
+
+                    <strong>
+                        Required Skills
+                    </strong>
+
+                    <div
+                        id="requiredSkills"
+                        class="skills"
+                    ></div>
+
+                </div>
+
+
+                <div class="preferred-container">
+
+                    <strong>
+                        Preferred Skills
+                    </strong>
+
+                    <div
+                        id="preferredSkills"
+                        class="skills"
+                    ></div>
+
+                </div>
+
+            </div>
+
+
+            <!-- CANDIDATES -->
+
+            <div
+                id="candidateList"
+                class="candidate-list"
+            ></div>
+
+
+            <!-- ERRORS -->
+
+            <div
+                id="processingErrors"
+                class="card hidden"
+            >
+
+                <h3>
+                    Processing Errors
+                </h3>
+
+                <ul
+                    id="errorList"
+                ></ul>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <footer>
+
+        AI Resume Screening Agent
+
+    </footer>
+
+</div>
+
+
+<script
+    src="/static/app.js"
+></script>
+
+</body>
+
+</html>
 
