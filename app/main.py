@@ -11,10 +11,18 @@ from fastapi import (
 
 from app.agents.jd_analyzer import (
     extract_skills,
+    extract_experience_years,
+    extract_education,
 )
 
 from app.agents.resume_analyzer import (
     find_matching_skills,
+)
+
+from app.agents.requirements_analyzer import (
+    extract_required_skills,
+    extract_preferred_skills,
+    extract_minimum_experience,
 )
 
 from app.services.document_parser import (
@@ -27,14 +35,23 @@ from app.services.embeddings import (
 
 from app.services.scoring import (
     calculate_skill_score,
+    calculate_experience_score,
+    calculate_preferred_score,
+    calculate_education_score,
+    calculate_certification_score,
     calculate_final_score,
     get_recommendation,
+)
+
+from app.services.mandatory_check import (
+    check_mandatory_skills,
+    apply_mandatory_penalty,
 )
 
 
 app = FastAPI(
     title="AI Resume Screening Agent",
-    version="3.0.0",
+    version="4.0.0",
 )
 
 
@@ -54,7 +71,7 @@ def home():
             "AI Resume Screening Agent "
             "is running"
         ),
-        "version": "3.0.0",
+        "version": "4.0.0",
     }
 
 
@@ -69,16 +86,29 @@ def health():
 @app.post("/analyze")
 async def analyze_resumes(
     job_description: str = Form(...),
-
     resumes: list[UploadFile] = File(...),
 ):
 
-    # -----------------------------------------
-    # 1. Analyze the Job Description
-    # -----------------------------------------
+    # =========================================
+    # JOB DESCRIPTION ANALYSIS
+    # =========================================
 
-    required_skills = extract_skills(
-        job_description
+    required_skills = (
+        extract_required_skills(
+            job_description
+        )
+    )
+
+    preferred_skills = (
+        extract_preferred_skills(
+            job_description
+        )
+    )
+
+    required_experience = (
+        extract_minimum_experience(
+            job_description
+        )
     )
 
     candidates = []
@@ -87,9 +117,9 @@ async def analyze_resumes(
 
     successful = 0
 
-    # -----------------------------------------
-    # 2. Process Every Resume
-    # -----------------------------------------
+    # =========================================
+    # RESUME PROCESSING
+    # =========================================
 
     for resume in resumes:
 
@@ -101,10 +131,6 @@ async def analyze_resumes(
         extension = os.path.splitext(
             filename
         )[1].lower()
-
-        # -------------------------------------
-        # Check file type
-        # -------------------------------------
 
         if extension not in [
             ".pdf",
@@ -163,7 +189,29 @@ async def analyze_resumes(
                 continue
 
             # ---------------------------------
-            # Skill matching
+            # Resume information
+            # ---------------------------------
+
+            candidate_skills = (
+                extract_skills(
+                    resume_text
+                )
+            )
+
+            candidate_experience = (
+                extract_experience_years(
+                    resume_text
+                )
+            )
+
+            education = (
+                extract_education(
+                    resume_text
+                )
+            )
+
+            # ---------------------------------
+            # Required skill matching
             # ---------------------------------
 
             skill_result = (
@@ -186,7 +234,7 @@ async def analyze_resumes(
             )
 
             # ---------------------------------
-            # Skill score
+            # Required skill score
             # ---------------------------------
 
             skill_score = (
@@ -197,7 +245,49 @@ async def analyze_resumes(
             )
 
             # ---------------------------------
-            # Semantic score
+            # Preferred skill score
+            # ---------------------------------
+
+            preferred_score = (
+                calculate_preferred_score(
+                    candidate_skills,
+                    preferred_skills,
+                )
+            )
+
+            # ---------------------------------
+            # Experience score
+            # ---------------------------------
+
+            experience_score = (
+                calculate_experience_score(
+                    candidate_experience,
+                    required_experience,
+                )
+            )
+
+            # ---------------------------------
+            # Education score
+            # ---------------------------------
+
+            education_score = (
+                calculate_education_score(
+                    education
+                )
+            )
+
+            # ---------------------------------
+            # Certification score
+            # ---------------------------------
+
+            certification_score = (
+                calculate_certification_score(
+                    resume_text
+                )
+            )
+
+            # ---------------------------------
+            # Semantic similarity
             # ---------------------------------
 
             semantic_score = (
@@ -208,15 +298,53 @@ async def analyze_resumes(
             )
 
             # ---------------------------------
-            # Final score
+            # Overall score
             # ---------------------------------
 
             final_score = (
                 calculate_final_score(
-                    skill_score,
-                    semantic_score,
+                    skill_score=skill_score,
+                    semantic_score=semantic_score,
+                    experience_score=experience_score,
+                    preferred_score=preferred_score,
+                    education_score=education_score,
+                    certification_score=(
+                        certification_score
+                    ),
                 )
             )
+
+            # ---------------------------------
+            # Mandatory requirements
+            # ---------------------------------
+
+            mandatory_result = (
+                check_mandatory_skills(
+                    required_skills,
+                    matched_skills,
+                )
+            )
+
+            missing_mandatory = (
+                mandatory_result[
+                    "missing_mandatory"
+                ]
+            )
+
+            # ---------------------------------
+            # Apply mandatory penalty
+            # ---------------------------------
+
+            final_score = (
+                apply_mandatory_penalty(
+                    final_score,
+                    missing_mandatory,
+                )
+            )
+
+            # ---------------------------------
+            # Recommendation
+            # ---------------------------------
 
             recommendation = (
                 get_recommendation(
@@ -240,12 +368,46 @@ async def analyze_resumes(
                         semantic_score
                     ),
 
+                    "experience_score": (
+                        experience_score
+                    ),
+
+                    "preferred_score": (
+                        preferred_score
+                    ),
+
+                    "education_score": (
+                        education_score
+                    ),
+
+                    "certification_score": (
+                        certification_score
+                    ),
+
+                    "candidate_experience_years": (
+                        candidate_experience
+                    ),
+
+                    "required_experience_years": (
+                        required_experience
+                    ),
+
                     "matched_skills": (
                         matched_skills
                     ),
 
                     "missing_skills": (
                         missing_skills
+                    ),
+
+                    "preferred_skills": (
+                        preferred_skills
+                    ),
+
+                    "education": education,
+
+                    "missing_mandatory": (
+                        missing_mandatory
                     ),
 
                     "recommendation": (
@@ -264,10 +426,7 @@ async def analyze_resumes(
 
         finally:
 
-            # ---------------------------------
-            # Delete uploaded resume
-            # ---------------------------------
-
+            # Delete temporary resume.
             if os.path.exists(
                 file_path
             ):
@@ -276,9 +435,9 @@ async def analyze_resumes(
                     file_path
                 )
 
-    # -----------------------------------------
-    # 3. Rank Candidates
-    # -----------------------------------------
+    # =========================================
+    # RANK
+    # =========================================
 
     candidates.sort(
         key=lambda candidate:
@@ -286,15 +445,11 @@ async def analyze_resumes(
         reverse=True,
     )
 
-    # -----------------------------------------
-    # 4. Select Top 5
-    # -----------------------------------------
+    # =========================================
+    # TOP 5
+    # =========================================
 
     top_5 = candidates[:5]
-
-    # -----------------------------------------
-    # 5. Add Ranking
-    # -----------------------------------------
 
     for index, candidate in enumerate(
         top_5,
@@ -303,9 +458,9 @@ async def analyze_resumes(
 
         candidate["rank"] = index
 
-    # -----------------------------------------
-    # 6. Return Result
-    # -----------------------------------------
+    # =========================================
+    # RESPONSE
+    # =========================================
 
     return {
         "total_resumes": len(resumes),
@@ -317,6 +472,12 @@ async def analyze_resumes(
         ),
 
         "required_skills": required_skills,
+
+        "preferred_skills": preferred_skills,
+
+        "required_experience_years": (
+            required_experience
+        ),
 
         "top_5": top_5,
 
