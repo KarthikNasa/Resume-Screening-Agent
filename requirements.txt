@@ -1,1 +1,9 @@
+fastapi
+uvicorn[standard]
+python-multipart
+pymupdf
+python-docx
+pydantic
+sentence-transformers
+numpy
 
