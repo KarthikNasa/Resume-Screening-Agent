@@ -711,4 +711,27 @@ footer {
     }
 
 }
+.file-item button {
+
+    border: none;
+
+    background: #fee2e2;
+
+    color: #b91c1c;
+
+    padding: 6px 10px;
+
+    border-radius: 6px;
+
+    cursor: pointer;
+
+}
+
+
+.file-item button:hover {
+
+    background: #fecaca;
+
+}
+
 
