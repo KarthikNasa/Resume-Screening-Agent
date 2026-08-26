@@ -14,15 +14,41 @@ def calculate_skill_score(
     return round(score, 2)
 
 
-def get_recommendation(score: float) -> str:
+def calculate_final_score(
+    skill_score: float,
+    semantic_score: float,
+) -> float:
+    """
+    Calculate the overall candidate score.
 
-    if score >= 90:
+    Skill match: 40%
+    Semantic match: 30%
+
+    The remaining 30% will be added in later stages.
+    """
+
+    final_score = (
+        skill_score * 0.40
+        + semantic_score * 0.30
+    )
+
+    return round(
+        final_score,
+        2,
+    )
+
+
+def get_recommendation(
+    score: float,
+) -> str:
+
+    if score >= 85:
         return "Excellent Match"
 
-    if score >= 75:
+    if score >= 70:
         return "Strong Match"
 
-    if score >= 60:
+    if score >= 55:
         return "Good Match"
 
     if score >= 40:
